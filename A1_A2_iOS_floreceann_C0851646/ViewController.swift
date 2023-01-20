@@ -16,7 +16,9 @@ class ViewController: UIViewController, CLLocationManagerDelegate  {
     var routeLine: MKPolyline?
     var locationManager = CLLocationManager()
     var destination: CLLocationCoordinate2D!
+    var userLocation: CLLocationCoordinate2D!
     var markerText: [String] = ["A", "B", "C"]
+    var citiesInAnnotation: [String] = [String]()
     var cities = [City]()
     var distanceLabels: [UILabel] = []
     
@@ -34,14 +36,10 @@ class ViewController: UIViewController, CLLocationManagerDelegate  {
         map.showsUserLocation = true
         map.delegate = self
         
-        let tap = UITapGestureRecognizer(target: self, action: #selector(dropPin))
-        tap.numberOfTapsRequired = 1
-        map.addGestureRecognizer(tap)
+        let doubleTap = UITapGestureRecognizer(target: self, action: #selector(dropPin))
+        doubleTap.numberOfTapsRequired = 2
+        map.addGestureRecognizer(doubleTap)
         
-        let longPress = UILongPressGestureRecognizer(target: self, action: #selector(dropPin))
-        longPress.delaysTouchesBegan = true
-        map.addGestureRecognizer(longPress)
-        map.delegate = self
     }
     
     @IBAction func drawRoute(_ sender: UIButton) {
@@ -98,9 +96,14 @@ class ViewController: UIViewController, CLLocationManagerDelegate  {
                         
                         if placeMark.locality != nil {
                             
-                            if self.cities.count <= 3 {
-                                let place = City(title: self.markerText[self.cities.count], subtitle: placeMark.locality!, coordinate: coordinate)
-
+                            if self.cities.count < 3 {
+                                
+                                let distance: Double = self.getDistance(from: self.userLocation, to:  coordinate)
+                                
+                                let place = City(title: self.markerText[self.cities.count],
+                                                 subtitle: "\(String.init(format: "%2.f",  round(distance * 0.001)))km",
+                                                 coordinate: coordinate)
+                                self.citiesInAnnotation.append(placeMark.locality!)
                                 self.cities.append(place)
                                 self.map.addAnnotation(place)
                             }
@@ -122,11 +125,13 @@ class ViewController: UIViewController, CLLocationManagerDelegate  {
         
         let latitude = userLocation.coordinate.latitude
         let longitude = userLocation.coordinate.longitude
-        displayLocation(latitude: latitude, longitude: longitude)
+        displayLocation(latitude: latitude, longitude: longitude, title: "My location")
+        self.userLocation = CLLocationCoordinate2D(latitude: latitude, longitude: longitude)
     }
     
     func displayLocation(latitude: CLLocationDegrees,
-                         longitude: CLLocationDegrees)
+                         longitude: CLLocationDegrees,
+                         title: String)
     {
         let latDelta: CLLocationDegrees = 0.7
         let lngDelta: CLLocationDegrees =  0.7
@@ -136,6 +141,11 @@ class ViewController: UIViewController, CLLocationManagerDelegate  {
         let region = MKCoordinateRegion(center: location, span: span)
         
         map.setRegion(region, animated: true)
+        
+        let annotation = MKPointAnnotation()
+        annotation.title = title
+        annotation.coordinate = location
+        map.addAnnotation(annotation)
     }
     
     func addPolyline() {
@@ -215,6 +225,28 @@ class ViewController: UIViewController, CLLocationManagerDelegate  {
 }
 
 extension ViewController: MKMapViewDelegate {
+    func mapView(_ mapView: MKMapView, viewFor annotation: MKAnnotation) -> MKAnnotationView? {
+        
+        if annotation is MKUserLocation {
+            return nil
+        }
+        
+        let annotationView = MKMarkerAnnotationView(annotation: annotation, reuseIdentifier: "MyMarker")
+        annotationView.canShowCallout = true
+        annotationView.rightCalloutAccessoryView = UIButton(type: .detailDisclosure)
+        
+        let label = UILabel(frame: CGRect(x: 0, y: 0, width: 200, height: 21))
+        label.text = annotation.subtitle as? String
+        label.font = UIFont.italicSystemFont(ofSize: 14.0)
+        label.numberOfLines = 0
+        annotationView.detailCalloutAccessoryView = label
+        
+        label.widthAnchor.constraint(lessThanOrEqualToConstant: label.frame.width).isActive = true
+        label.heightAnchor.constraint(lessThanOrEqualToConstant: 90.0).isActive = true
+        
+        return annotationView
+    }
+    
     func mapView(_ mapView: MKMapView, rendererFor overlay: MKOverlay) -> MKOverlayRenderer {
         if overlay is MKPolyline {
             let rendrer = MKPolylineRenderer(overlay: overlay)
