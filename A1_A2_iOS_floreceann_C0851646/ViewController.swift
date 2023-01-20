@@ -34,7 +34,14 @@ class ViewController: UIViewController, CLLocationManagerDelegate  {
         map.showsUserLocation = true
         map.delegate = self
         
-        addTap()
+        let tap = UITapGestureRecognizer(target: self, action: #selector(dropPin))
+        tap.numberOfTapsRequired = 1
+        map.addGestureRecognizer(tap)
+        
+        let longPress = UILongPressGestureRecognizer(target: self, action: #selector(dropPin))
+        longPress.delaysTouchesBegan = true
+        map.addGestureRecognizer(longPress)
+        map.delegate = self
     }
 
     func locationManager(_ manager: CLLocationManager, didUpdateLocations locations: [CLLocation]) {
@@ -59,12 +66,6 @@ class ViewController: UIViewController, CLLocationManagerDelegate  {
         map.setRegion(region, animated: true)
     }
     
-    func addTap() {
-        let tap = UITapGestureRecognizer(target: self, action: #selector(dropPin))
-        tap.numberOfTapsRequired = 1
-        map.addGestureRecognizer(tap)
-    }
-    
     @objc func dropPin(sender: UITapGestureRecognizer) {
         
         let touchpoint = sender.location(in: map)
@@ -84,9 +85,10 @@ class ViewController: UIViewController, CLLocationManagerDelegate  {
                     if let placeMark = placemarks?[0] {
                         
                         if placeMark.locality != nil {
-                            let place = City(title: self.markerText[self.cities.count], subtitle: placeMark.locality!, coordinate: coordinate)
                             
                             if self.cities.count <= 3 {
+                                let place = City(title: self.markerText[self.cities.count], subtitle: placeMark.locality!, coordinate: coordinate)
+
                                 self.cities.append(place)
                                 self.map.addAnnotation(place)
                             }
