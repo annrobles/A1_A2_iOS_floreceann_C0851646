@@ -43,27 +43,39 @@ class ViewController: UIViewController, CLLocationManagerDelegate  {
         map.addGestureRecognizer(longPress)
         map.delegate = self
     }
-
-    func locationManager(_ manager: CLLocationManager, didUpdateLocations locations: [CLLocation]) {
-        
-        let userLocation = locations[0]
-        
-        let latitude = userLocation.coordinate.latitude
-        let longitude = userLocation.coordinate.longitude
-        displayLocation(latitude: latitude, longitude: longitude)
-    }
     
-    func displayLocation(latitude: CLLocationDegrees,
-                         longitude: CLLocationDegrees)
-    {
-        let latDelta: CLLocationDegrees = 0.7
-        let lngDelta: CLLocationDegrees =  0.7
+    @IBAction func drawRoute(_ sender: UIButton) {
+        map.removeOverlays(map.overlays)
+        removeDistanceLabel()
         
-        let span = MKCoordinateSpan(latitudeDelta: latDelta, longitudeDelta: lngDelta)
-        let location = CLLocationCoordinate2D(latitude: latitude, longitude: longitude)
-        let region = MKCoordinateRegion(center: location, span: span)
-        
-        map.setRegion(region, animated: true)
+        var nextIndex = 0
+        for index in 0...2 {
+            if index == 2 {
+                nextIndex = 0
+            } else {
+                nextIndex = index + 1
+            }
+            
+            let sourcePlaceMark = MKPlacemark(coordinate: cities[index].coordinate)
+            let destinationPlaceMark = MKPlacemark(coordinate: cities[nextIndex].coordinate)
+            let directionRequest = MKDirections.Request()
+            
+            directionRequest.source = MKMapItem(placemark: sourcePlaceMark)
+            directionRequest.destination = MKMapItem(placemark: destinationPlaceMark)
+            directionRequest.transportType = .automobile
+            let directions = MKDirections(request: directionRequest)
+            directions.calculate { (response, error) in
+                guard let directionResponse = response else {return}
+                
+                let route = directionResponse.routes[0]
+                
+                self.routeLine = route.polyline
+                self.map.addOverlay(self.routeLine!, level: .aboveRoads)
+                
+                let rect = route.polyline.boundingMapRect
+                self.map.setVisibleMapRect(rect, edgePadding: UIEdgeInsets(top: 100, left: 100, bottom: 100, right: 100), animated: true)
+            }
+        }
     }
     
     @objc func dropPin(sender: UITapGestureRecognizer) {
@@ -102,6 +114,28 @@ class ViewController: UIViewController, CLLocationManagerDelegate  {
                 }
             }
         })
+    }
+    
+    func locationManager(_ manager: CLLocationManager, didUpdateLocations locations: [CLLocation]) {
+        
+        let userLocation = locations[0]
+        
+        let latitude = userLocation.coordinate.latitude
+        let longitude = userLocation.coordinate.longitude
+        displayLocation(latitude: latitude, longitude: longitude)
+    }
+    
+    func displayLocation(latitude: CLLocationDegrees,
+                         longitude: CLLocationDegrees)
+    {
+        let latDelta: CLLocationDegrees = 0.7
+        let lngDelta: CLLocationDegrees =  0.7
+        
+        let span = MKCoordinateSpan(latitudeDelta: latDelta, longitudeDelta: lngDelta)
+        let location = CLLocationCoordinate2D(latitude: latitude, longitude: longitude)
+        let region = MKCoordinateRegion(center: location, span: span)
+        
+        map.setRegion(region, animated: true)
     }
     
     func addPolyline() {
@@ -153,6 +187,29 @@ class ViewController: UIViewController, CLLocationManagerDelegate  {
         let to = CLLocation(latitude: to.latitude, longitude: to.longitude)
         
         return from.distance(from: to)
+    }
+    
+    private func removeDistanceLabel() {
+        for label in distanceLabels {
+            label.removeFromSuperview()
+        }
+        
+        distanceLabels = []
+    }
+    
+    func removePin() {
+        for annotation in map.annotations {
+            map.removeAnnotation(annotation)
+        }
+    }
+    
+    func removeOverlays() {
+        routeButton.isHidden = true
+        removeDistanceLabel()
+        
+        for polygon in map.overlays {
+            map.removeOverlay(polygon)
+        }
     }
 
 }

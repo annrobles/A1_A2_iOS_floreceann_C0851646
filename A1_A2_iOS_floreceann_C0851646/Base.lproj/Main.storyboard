@@ -30,6 +30,9 @@
                                 <rect key="frame" x="311.66666666666669" y="741.33333333333337" width="71.333333333333314" height="56.666666666666629"/>
                                 <state key="normal" title="Button"/>
                                 <buttonConfiguration key="configuration" style="plain" image="route_icon" title=" "/>
+                                <connections>
+                                    <action selector="drawRoute:" destination="BYZ-38-t0r" eventType="touchUpInside" id="nJR-Aw-Zmr"/>
+                                </connections>
                             </button>
                         </subviews>
                         <viewLayoutGuide key="safeArea" id="6Tk-OE-BBY"/>
