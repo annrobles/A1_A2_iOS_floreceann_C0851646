@@ -108,12 +108,51 @@ class ViewController: UIViewController, CLLocationManagerDelegate  {
         let coordinates = cities.map {$0.coordinate}
         let polyline = MKPolyline(coordinates: coordinates, count: coordinates.count)
         map.addOverlay(polyline, level: .aboveRoads)
+        
+        showDistanceBetweenTwoPoint()
     }
     
     func addPolygon() {
         let coordinates = cities.map {$0.coordinate}
         let polygon = MKPolygon(coordinates: coordinates, count: coordinates.count)
         map.addOverlay(polygon)
+    }
+    
+    private func showDistanceBetweenTwoPoint() {
+        var nextIndex = 0
+        
+        for index in 0...2{
+            if index == 2 {
+                nextIndex = 0
+            } else {
+                nextIndex = index + 1
+            }
+
+            let distance: Double = getDistance(from: cities[index].coordinate, to:  cities[nextIndex].coordinate)
+            
+            let pointA: CGPoint = map.convert(cities[index].coordinate, toPointTo: map)
+            let pointB: CGPoint = map.convert(cities[nextIndex].coordinate, toPointTo: map)
+        
+            let labelDistance = UILabel(frame: CGRect(x: 0, y: 0, width: 50, height: 18))
+
+            labelDistance.textAlignment = NSTextAlignment.center
+            labelDistance.text = "\(String.init(format: "%2.f",  round(distance * 0.001)))km"
+            labelDistance.textColor = .black
+            labelDistance.font = UIFont(name: "Thonburi-Bold", size: 10.0)
+            labelDistance.center = CGPoint(x: (pointA.x + pointB.x) / 2, y: (pointA.y + pointB.y) / 2)
+            
+            distanceLabels.append(labelDistance)
+        }
+        for label in distanceLabels {
+            map.addSubview(label)
+        }
+    }
+    
+    func getDistance(from: CLLocationCoordinate2D, to: CLLocationCoordinate2D) -> CLLocationDistance {
+        let from = CLLocation(latitude: from.latitude, longitude: from.longitude)
+        let to = CLLocation(latitude: to.latitude, longitude: to.longitude)
+        
+        return from.distance(from: to)
     }
 
 }
