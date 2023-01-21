@@ -61,6 +61,8 @@ class ViewController: UIViewController, CLLocationManagerDelegate  {
         searchBar.placeholder = "Search for places"
         navigationItem.searchController = resultSearchController
         
+        locationSearchTable.handleMapSearchDelegate = self
+        
     }
     
     @IBAction func drawRoute(_ sender: UIButton) {
@@ -351,22 +353,33 @@ extension ViewController: MKMapViewDelegate {
 
 extension ViewController: HandleMapSearch {
     func dropPinZoomIn(placemark:MKPlacemark){
-        // cache the pin
-        selectedPin = placemark
-        // clear existing pins
-        map.removeAnnotations(self.map.annotations)
-        let annotation = MKPointAnnotation()
-        annotation.coordinate = placemark.coordinate
-        annotation.title = placemark.name
-        if let city = placemark.locality,
-        let state = placemark.administrativeArea {
-            annotation.subtitle = "\(city) \(state)"
-        }
-        map.addAnnotation(annotation)
+        var marker: String?
         
-        let span = MKCoordinateSpan(latitudeDelta: 0.7, longitudeDelta: 0.7)
-        let location = CLLocationCoordinate2D(latitude: placemark.coordinate.latitude, longitude: placemark.coordinate.longitude)
-        let region = MKCoordinateRegion(center: location, span: span)
-        map.setRegion(region, animated: true)
+        cityCnt = cities.count
+        
+        if cityCnt == 0 {
+            marker = "A"
+        }
+        else if cityCnt == 1 {
+            marker = "B"
+        }
+        else {
+            marker = "C"
+        }
+        
+        let distance: Double = self.getDistance(from: self.userLocation, to:  placemark.coordinate)
+        let place = City(title: marker,
+                         subtitle: placemark.locality!,
+                         coordinate: placemark.coordinate)
+        
+        self.citiesInAnnotation.append(placemark.locality!)
+        self.cities.append(place)
+        self.map.addAnnotation(place)
+        self.distancesBetweenCityUser.append("\(String.init(format: "%2.f",  round(distance * 0.001)))km")
+        
+        if self.cities.count == 3 {
+            self.addPolyline()
+            self.addPolygon()
+        }
     }
 }
