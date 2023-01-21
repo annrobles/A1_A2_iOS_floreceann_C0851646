@@ -18,6 +18,7 @@ class ViewController: UIViewController, CLLocationManagerDelegate  {
     
     var userLocation: CLLocationCoordinate2D!
     var citiesInAnnotation: [String] = [String]()
+    var distancesBetweenCityUser: [String] = [String]()
     var cities = [City]()
     var cityCnt: Int = 0
     var distanceLabels: [UILabel] = []
@@ -98,7 +99,7 @@ class ViewController: UIViewController, CLLocationManagerDelegate  {
         else {
             marker = "C"
         }
-        print(self.map.annotations.count)
+
         CLGeocoder().reverseGeocodeLocation(CLLocation(latitude: coordinate.latitude, longitude: coordinate.longitude), completionHandler: {(placemarks, error) in
             
             if error != nil {
@@ -111,27 +112,60 @@ class ViewController: UIViewController, CLLocationManagerDelegate  {
                             
                             let distance: Double = self.getDistance(from: self.userLocation, to:  coordinate)
                             let place = City(title: marker,
-                                             subtitle: "\(String.init(format: "%2.f",  round(distance * 0.001)))km",
+                                             subtitle: placeMark.locality!,
                                              coordinate: coordinate)
-                            
+
                             if self.cityCnt < 3 {
-                                self.citiesInAnnotation.append(placeMark.locality!)
-                                self.cities.append(place)
-                                self.map.addAnnotation(place)
-                                print(self.map.annotations.count)
+                                if self.citiesInAnnotation.contains(placeMark.locality!) {
+                                    for (index, myAnnotation) in self.map.annotations.enumerated() {
+                                        
+                                        if myAnnotation.subtitle == placeMark.locality {
+                                            let citiesInAnnotationIndex = self.citiesInAnnotation.firstIndex(of: myAnnotation.subtitle! ?? "")
+                                            self.removeOverlays()
+                                            self.map.removeAnnotation(myAnnotation)
+                                            place.title = self.cities[citiesInAnnotationIndex!].title
+                                            self.cities.remove(at: citiesInAnnotationIndex!)
+                                            self.cities.append(place)
+                                            self.map.addAnnotation(place)
+                                            self.distancesBetweenCityUser[citiesInAnnotationIndex!] = "\(String.init(format: "%2.f",  round(distance * 0.001)))km"
+                                        }
+                                    }
+                                }
+                                else {
+                                    self.citiesInAnnotation.append(placeMark.locality!)
+                                    self.cities.append(place)
+                                    self.map.addAnnotation(place)
+                                    self.distancesBetweenCityUser.append("\(String.init(format: "%2.f",  round(distance * 0.001)))km")
+                                }
+
                             }
                             else {
                                 if self.citiesInAnnotation.contains(placeMark.locality!) {
-                                    
+                                    for (index, myAnnotation) in self.map.annotations.enumerated() {
+                                        
+                                        if myAnnotation.subtitle == placeMark.locality {
+                                            let citiesInAnnotationIndex = self.citiesInAnnotation.firstIndex(of: myAnnotation.subtitle! ?? "")
+                                            self.removeOverlays()
+                                            self.map.removeAnnotation(myAnnotation)
+                                            place.title = self.cities[citiesInAnnotationIndex!].title
+                                            self.cities.remove(at: citiesInAnnotationIndex!)
+                                            self.cities.append(place)
+                                            self.map.addAnnotation(place)
+                                            self.distancesBetweenCityUser[citiesInAnnotationIndex!] = "\(String.init(format: "%2.f",  round(distance * 0.001)))km"
+                                        }
+                                    }
                                 } else {
-                                    place.title = "A"
                                     self.removeOverlays()
                                     self.map.removeAnnotations(self.map.annotations)
+                                    self.cityCnt = 1
                                     self.cities = []
                                     self.citiesInAnnotation = []
+                                    self.distancesBetweenCityUser = []
+                                    place.title = "A"
                                     self.cities.append(place)
-                                    self.cityCnt = 1
                                     self.map.addAnnotation(place)
+                                    self.citiesInAnnotation.append(placeMark.locality!)
+                                    self.distancesBetweenCityUser.append("\(String.init(format: "%2.f",  round(distance * 0.001)))km")
                                 }
                             }
 
@@ -262,10 +296,14 @@ extension ViewController: MKMapViewDelegate {
         annotationView.canShowCallout = true
         annotationView.rightCalloutAccessoryView = UIButton(type: .detailDisclosure)
         
+        let citiesInAnnotationIndex = self.citiesInAnnotation.firstIndex(of: annotation.subtitle! ?? "")
         let label = UILabel(frame: CGRect(x: 0, y: 0, width: 200, height: 21))
-        label.text = annotation.subtitle as? String
         label.font = UIFont.italicSystemFont(ofSize: 14.0)
-        label.numberOfLines = 0
+        
+        if citiesInAnnotationIndex != nil {
+            label.text = self.distancesBetweenCityUser[citiesInAnnotationIndex!]
+        }
+        
         annotationView.detailCalloutAccessoryView = label
         
         label.widthAnchor.constraint(lessThanOrEqualToConstant: label.frame.width).isActive = true
