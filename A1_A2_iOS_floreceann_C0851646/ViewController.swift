@@ -8,6 +8,10 @@
 import UIKit
 import MapKit
 
+protocol HandleMapSearch {
+    func dropPinZoomIn(placemark:MKPlacemark)
+}
+
 class ViewController: UIViewController, CLLocationManagerDelegate  {
 
     @IBOutlet weak var map: MKMapView!
@@ -23,10 +27,11 @@ class ViewController: UIViewController, CLLocationManagerDelegate  {
     var cityCnt: Int = 0
     var distanceLabels: [UILabel] = []
     
+    var resultSearchController:UISearchController? = nil
+    var selectedPin:MKPlacemark? = nil
+    
     override func viewDidLoad() {
         super.viewDidLoad()
-        
-        routeButton.isHidden = true
         
         locationManager.delegate = self
         locationManager.desiredAccuracy = kCLLocationAccuracyBest
@@ -40,6 +45,21 @@ class ViewController: UIViewController, CLLocationManagerDelegate  {
         let doubleTap = UITapGestureRecognizer(target: self, action: #selector(dropPin))
         doubleTap.numberOfTapsRequired = 2
         map.addGestureRecognizer(doubleTap)
+        
+        let locationSearchTable = storyboard!.instantiateViewController(withIdentifier: "LocationSearchTable") as! LocationSearchTable
+        resultSearchController = UISearchController(searchResultsController: locationSearchTable)
+        resultSearchController?.searchResultsUpdater = locationSearchTable as? any UISearchResultsUpdating
+        
+        resultSearchController?.hidesNavigationBarDuringPresentation = false
+        resultSearchController?.dimsBackgroundDuringPresentation = true
+        definesPresentationContext = true
+        
+        locationSearchTable.mapView = map
+        
+        let searchBar = resultSearchController!.searchBar
+        searchBar.sizeToFit()
+        searchBar.placeholder = "Search for places"
+        navigationItem.searchController = resultSearchController
         
     }
     
@@ -85,10 +105,6 @@ class ViewController: UIViewController, CLLocationManagerDelegate  {
         let marker: String
         
         cityCnt = cities.count
-        
-        if cityCnt > 1 {
-            routeButton.isHidden = false
-        }
         
         if cityCnt == 0 {
             marker = "A"
@@ -275,7 +291,6 @@ class ViewController: UIViewController, CLLocationManagerDelegate  {
     }
     
     func removeOverlays() {
-        routeButton.isHidden = true
         removeDistanceLabel()
         
         for polygon in map.overlays {
@@ -331,5 +346,27 @@ extension ViewController: MKMapViewDelegate {
             return rendrer
         }
         return MKOverlayRenderer()
+    }
+}
+
+extension ViewController: HandleMapSearch {
+    func dropPinZoomIn(placemark:MKPlacemark){
+        // cache the pin
+        selectedPin = placemark
+        // clear existing pins
+        map.removeAnnotations(self.map.annotations)
+        let annotation = MKPointAnnotation()
+        annotation.coordinate = placemark.coordinate
+        annotation.title = placemark.name
+        if let city = placemark.locality,
+        let state = placemark.administrativeArea {
+            annotation.subtitle = "\(city) \(state)"
+        }
+        map.addAnnotation(annotation)
+        
+        let span = MKCoordinateSpan(latitudeDelta: 0.7, longitudeDelta: 0.7)
+        let location = CLLocationCoordinate2D(latitude: placemark.coordinate.latitude, longitude: placemark.coordinate.longitude)
+        let region = MKCoordinateRegion(center: location, span: span)
+        map.setRegion(region, animated: true)
     }
 }

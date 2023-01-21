@@ -14,6 +14,7 @@
 		70576B5E297B457200511F08 /* Assets.xcassets in Resources */ = {isa = PBXBuildFile; fileRef = 70576B5D297B457200511F08 /* Assets.xcassets */; };
 		70576B61297B457200511F08 /* LaunchScreen.storyboard in Resources */ = {isa = PBXBuildFile; fileRef = 70576B5F297B457200511F08 /* LaunchScreen.storyboard */; };
 		70576B69297B490600511F08 /* City.swift in Sources */ = {isa = PBXBuildFile; fileRef = 70576B68297B490600511F08 /* City.swift */; };
+		70576B71297B829800511F08 /* LocationSearchTable.swift in Sources */ = {isa = PBXBuildFile; fileRef = 70576B70297B829800511F08 /* LocationSearchTable.swift */; };
 /* End PBXBuildFile section */
 
 /* Begin PBXFileReference section */
@@ -26,6 +27,7 @@
 		70576B60297B457200511F08 /* Base */ = {isa = PBXFileReference; lastKnownFileType = file.storyboard; name = Base; path = Base.lproj/LaunchScreen.storyboard; sourceTree = "<group>"; };
 		70576B62297B457200511F08 /* Info.plist */ = {isa = PBXFileReference; lastKnownFileType = text.plist.xml; path = Info.plist; sourceTree = "<group>"; };
 		70576B68297B490600511F08 /* City.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = City.swift; sourceTree = "<group>"; };
+		70576B70297B829800511F08 /* LocationSearchTable.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = LocationSearchTable.swift; sourceTree = "<group>"; };
 /* End PBXFileReference section */
 
 /* Begin PBXFrameworksBuildPhase section */
@@ -66,6 +68,7 @@
 				70576B5F297B457200511F08 /* LaunchScreen.storyboard */,
 				70576B62297B457200511F08 /* Info.plist */,
 				70576B68297B490600511F08 /* City.swift */,
+				70576B70297B829800511F08 /* LocationSearchTable.swift */,
 			);
 			path = A1_A2_iOS_floreceann_C0851646;
 			sourceTree = "<group>";
@@ -142,6 +145,7 @@
 			buildActionMask = 2147483647;
 			files = (
 				70576B59297B457000511F08 /* ViewController.swift in Sources */,
+				70576B71297B829800511F08 /* LocationSearchTable.swift in Sources */,
 				70576B55297B457000511F08 /* AppDelegate.swift in Sources */,
 				70576B69297B490600511F08 /* City.swift in Sources */,
 				70576B57297B457000511F08 /* SceneDelegate.swift in Sources */,
