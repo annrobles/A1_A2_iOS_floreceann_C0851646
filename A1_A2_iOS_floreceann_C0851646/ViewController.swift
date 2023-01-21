@@ -15,11 +15,11 @@ class ViewController: UIViewController, CLLocationManagerDelegate  {
     
     var routeLine: MKPolyline?
     var locationManager = CLLocationManager()
-    var destination: CLLocationCoordinate2D!
+    
     var userLocation: CLLocationCoordinate2D!
-    var markerText: [String] = ["A", "B", "C"]
     var citiesInAnnotation: [String] = [String]()
     var cities = [City]()
+    var cityCnt: Int = 0
     var distanceLabels: [UILabel] = []
     
     override func viewDidLoad() {
@@ -81,11 +81,24 @@ class ViewController: UIViewController, CLLocationManagerDelegate  {
         let touchpoint = sender.location(in: map)
         let coordinate = map.convert(touchpoint, toCoordinateFrom: map)
         let annotation = MKPointAnnotation()
+        let marker: String
         
-        if self.cities.count > 1 {
+        cityCnt = cities.count
+        
+        if cityCnt > 1 {
             routeButton.isHidden = false
         }
         
+        if cityCnt == 0 {
+            marker = "A"
+        }
+        else if cityCnt == 1 {
+            marker = "B"
+        }
+        else {
+            marker = "C"
+        }
+        print(self.map.annotations.count)
         CLGeocoder().reverseGeocodeLocation(CLLocation(latitude: coordinate.latitude, longitude: coordinate.longitude), completionHandler: {(placemarks, error) in
             
             if error != nil {
@@ -96,16 +109,30 @@ class ViewController: UIViewController, CLLocationManagerDelegate  {
                         
                         if placeMark.locality != nil {
                             
-                            if self.cities.count < 3 {
-                                
-                                let distance: Double = self.getDistance(from: self.userLocation, to:  coordinate)
-                                
-                                let place = City(title: self.markerText[self.cities.count],
-                                                 subtitle: "\(String.init(format: "%2.f",  round(distance * 0.001)))km",
-                                                 coordinate: coordinate)
+                            let distance: Double = self.getDistance(from: self.userLocation, to:  coordinate)
+                            let place = City(title: marker,
+                                             subtitle: "\(String.init(format: "%2.f",  round(distance * 0.001)))km",
+                                             coordinate: coordinate)
+                            
+                            if self.cityCnt < 3 {
                                 self.citiesInAnnotation.append(placeMark.locality!)
                                 self.cities.append(place)
                                 self.map.addAnnotation(place)
+                                print(self.map.annotations.count)
+                            }
+                            else {
+                                if self.citiesInAnnotation.contains(placeMark.locality!) {
+                                    
+                                } else {
+                                    place.title = "A"
+                                    self.removeOverlays()
+                                    self.map.removeAnnotations(self.map.annotations)
+                                    self.cities = []
+                                    self.citiesInAnnotation = []
+                                    self.cities.append(place)
+                                    self.cityCnt = 1
+                                    self.map.addAnnotation(place)
+                                }
                             }
 
                             if self.cities.count == 3 {
